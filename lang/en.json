@@ -47,10 +47,14 @@
     "Field.RageCost":       "Rage Cost",
     "Field.WillpowerCost":  "Willpower Cost",
     "Field.Source":         "Source (optional)",
-    "Field.Book":           "Book",
-    "Field.Book.Placeholder": "e.g. W5 Core",
-    "Field.Page":           "Page",
-    "Field.Page.Placeholder": "e.g. 148",
+    "Field.Book":           {
+      "label": "Book",
+      "Placeholder": "e.g. W5 Core"
+    },
+    "Field.Page":           {
+      "label": "Page",
+      "Placeholder": "e.g. 148"
+    },
 
     "Pool.Hint":        "Select attributes, skills or renown for the dice pool.",
     "Pool.ContestHint": "For contested rolls (Pool A vs Pool B) only the left side (before 'vs') is used.",
