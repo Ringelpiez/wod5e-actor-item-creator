@@ -2,9 +2,14 @@
  * WoD5e Actor Item Creator
  * Script 1/2: item-creator.js — Gift & Rite Item Creator
  *
- * Alle sichtbaren Texte werden ausschließlich über LW() / L() aufgelöst.
- * L / LW / LSP werden global in init.js definiert und sind hier verfügbar.
+ * i18n: alle Texte über L() / LW(). Schlüssel ohne Punkt-Kollisionen.
+ * API-Export: game.modules.get("wod5e-actor-item-creator").api.WodItemCreator
  */
+
+// Modul-lokale Helfer (kein Namenskonflikt mit actor-creator.js,
+// da ES-Module eigene Scopes haben)
+const L  = (key) => game.i18n.localize(key);
+const LW = (key) => game.i18n.localize(`WODIC.${key}`);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WodItemCreator — Gift & Rite Item Creator
@@ -181,7 +186,7 @@ class WodItemCreator {
       }
     }
 
-    // Renown-Map aus System-API + Fallbacks aufbauen
+    // Renown-Map dynamisch aus System + Fallbacks
     const renownMap = { glory:"glory", honor:"honor", wisdom:"wisdom", ruhm:"glory", ehre:"honor", weisheit:"wisdom" };
     try {
       for (const [k, v] of Object.entries(WOD5E.Renown.getList({}))) {
@@ -190,7 +195,7 @@ class WodItemCreator {
       }
     } catch {}
 
-    // Lokalisierte Labels für Beschreibungsfelder
+    // Lokalisierte Label-Strings für Beschreibungsfelder
     const lRenown   = LW("Parse.Renown");
     const lCost     = LW("Parse.Cost");
     const lPool     = LW("Parse.Pool");
@@ -213,7 +218,6 @@ class WodItemCreator {
         descLines.push(`<strong>${lRenown}:</strong> ${line.replace(/^(?:renown|ruf)\s*[:：]\s*/i, "").trim()}`);
         systemSection = false; continue;
       }
-
       if (/^(cost|kosten)\s*[:：]/i.test(line)) {
         const val = line.replace(/^(?:cost|kosten)\s*[:：]\s*/i, "").trim();
         const num = parseInt((val.match(/(\d+)/) || [])[1]) || 1;
@@ -222,7 +226,6 @@ class WodItemCreator {
         descLines.push(`<strong>${lCost}:</strong> ${val}`);
         systemSection = false; continue;
       }
-
       if (/^(pool|würfelvorrat|wuerfelvorrat)\s*[:：]/i.test(line)) {
         result.poolExplicit = true;
         const pv = line.replace(/^(?:pool|würfelvorrat|wuerfelvorrat)\s*[:：]\s*/i, "").trim();
@@ -230,17 +233,14 @@ class WodItemCreator {
         descLines.push(`<strong>${lPool}:</strong> ${pv || "—"}`);
         systemSection = false; continue;
       }
-
       if (/^(action|aktion)\s*[:：]/i.test(line)) {
         descLines.push(`<strong>${lAction}:</strong> ${line.replace(/^(?:action|aktion)\s*[:：]\s*/i, "").trim()}`);
         systemSection = false; continue;
       }
-
       if (/^(duration|dauer)\s*[:：]/i.test(line)) {
         descLines.push(`<strong>${lDuration}:</strong> ${line.replace(/^(?:duration|dauer)\s*[:：]\s*/i, "").trim()}`);
         systemSection = false; continue;
       }
-
       if (/^system\s*[:：]/i.test(line)) {
         systemSection = true;
         const rest = line.replace(/^system\s*[:：]\s*/i, "").trim();
@@ -248,25 +248,21 @@ class WodItemCreator {
         continue;
       }
       if (systemSection) { descLines.push(line); continue; }
-
       if (/^(source|quelle)\s*[:：]/i.test(line)) {
         result.sourceBook = line.replace(/^(?:source|quelle)\s*[:：]\s*/i, "").trim();
         descLines.push(`<strong>${lSource}:</strong> ${result.sourceBook}`);
         systemSection = false; continue;
       }
-
       if (/^(page|seite)\s*[:：]/i.test(line)) {
         result.sourcePage = line.replace(/^(?:page|seite)\s*[:：]\s*/i, "").trim();
         descLines.push(`<strong>${lPage}:</strong> ${result.sourcePage}`);
         systemSection = false; continue;
       }
-
       if (/^\(.*p\.\s*\d+/i.test(line)) {
         const m = line.match(/p\.\s*(\d+)/i);
         if (m && !result.sourcePage) result.sourcePage = m[1];
         descLines.push(line); continue;
       }
-
       descLines.push(line);
     }
 
@@ -275,6 +271,13 @@ class WodItemCreator {
       { path: "attributes.strength" }, { path: "renown.glory" },
     ];
     return result;
+  }
+
+  // ── HTML-Escape für Nutzereingaben in innerHTML ───────────────────────────
+  static esc(v) {
+    return String(v ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   // ── HTML-Hilfsmethoden ─────────────────────────────────────────────────────
@@ -422,7 +425,7 @@ class WodItemCreator {
         postRender: null,
       },
 
-      // 1: Textblock (Text-Modus)
+      // 1: Textblock
       {
         title: `${L("WOD5E.WTA.GiftsandRites")} — ${LW("Step.TextTitle")}`,
         nextLabel: LW("Btn.Submit"),
@@ -533,11 +536,11 @@ class WodItemCreator {
             <div class="wod-ic g2">
               <div><label>${LW("Field.Book")}</label>
                 <input type="text" name="sourceBook" value="${sourceBook}"
-                  placeholder="${LW("Field.Book.Placeholder")}" />
+                  placeholder="${LW("Field.BookPlaceholder")}" />
               </div>
               <div><label>${LW("Field.Page")}</label>
                 <input type="text" name="sourcePage" value="${sourcePage}"
-                  placeholder="${LW("Field.Page.Placeholder")}" />
+                  placeholder="${LW("Field.PagePlaceholder")}" />
               </div>
             </div>`;
         },
@@ -634,7 +637,7 @@ class WodItemCreator {
             <h3 class="wod-ic" style="margin-top:18px;">${LW("Summary.Title")}</h3>
             <table class="wod-ic">
               <tr><td style="font-weight:bold;">${LW("Field.Name")}</td>
-                  <td>${s.d1?.itemName ?? "–"}</td></tr>
+                  <td>${WodItemCreator.esc(s.d1?.itemName ?? "–")}</td></tr>
               <tr><td style="font-weight:bold;">${LW("Summary.Type")}</td>
                   <td>${isRite ? L("WOD5E.WTA.Rite") : L("WOD5E.WTA.Gift")}</td></tr>
               <tr><td style="font-weight:bold;">${LW("Summary.Subtype")}</td>
@@ -653,7 +656,7 @@ class WodItemCreator {
                   <td>${poolSummary}</td></tr>
               <tr><td style="font-weight:bold;">${LW("Summary.Source")}</td>
                   <td>${s.d1?.sourceBook
-                    ? `${s.d1.sourceBook}, ${LW("Field.Page")} ${s.d1.sourcePage}`
+                    ? `${WodItemCreator.esc(s.d1.sourceBook)}, ${LW("Field.Page")} ${WodItemCreator.esc(s.d1.sourcePage)}`
                     : "–"}</td></tr>
             </table>`;
         },
@@ -712,8 +715,22 @@ class WodItemCreator {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Hook — Button in der Item-Sidebar
+// Hooks
 // ═══════════════════════════════════════════════════════════════════════════
+
+// API-Export
+Hooks.once("ready", () => {
+  if (game.system.id !== "wod5e") return;
+  const mod = game.modules.get("wod5e-actor-item-creator");
+  if (mod) {
+    mod.api ??= {};
+    mod.api.WodItemCreator      = WodItemCreator;
+    mod.api.openItemCreator     = () => WodItemCreator.run();
+  }
+  console.log("[wod5e-actor-item-creator] item-creator.js bereit.");
+});
+
+// Button im Item-Directory (Sidebar)
 Hooks.on("renderItemDirectory", (app, html) => {
   if (game.system.id !== "wod5e") return;
   if (!game.user.isGM && !game.user.hasPermission("ITEM_CREATE")) return;

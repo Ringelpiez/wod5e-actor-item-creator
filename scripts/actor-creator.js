@@ -2,17 +2,21 @@
  * WoD5e Actor Item Creator
  * Script 2/2: actor-creator.js — SPC Actor Creator
  *
- * Alle sichtbaren Texte werden ausschließlich über LSP() / LW() / L() aufgelöst.
- * L / LW / LSP werden global in init.js definiert und sind hier verfügbar.
- * Eigener i18n-Namespace: WODIC.SPC.*
+ * i18n: alle Texte über LSP() / LW() / L(). Namespace WODIC.SPC.*
+ * API-Export: game.modules.get("wod5e-actor-item-creator").api.WodSpcCreator
  */
+
+// Modul-lokale Helfer (ES-Module-Scope — kein Konflikt mit item-creator.js)
+const L   = (key) => game.i18n.localize(key);
+const LW  = (key) => game.i18n.localize(`WODIC.${key}`);
+const LSP = (key) => game.i18n.localize(`WODIC.SPC.${key}`);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WodSpcCreator — SPC Actor Creator
 // ═══════════════════════════════════════════════════════════════════════════
 class WodSpcCreator {
 
-  // ── CSS für den Dialog (inline, kein externes Stylesheet nötig) ───────────
+  // ── Inline-CSS für SPC-Dialoge ────────────────────────────────────────────
   static get CSS() {
     return `<style>
       .wf label         { display:block; margin-top:7px; font-weight:bold;
@@ -33,6 +37,13 @@ class WodSpcCreator {
       .wf code          { background:var(--color-bg-option,#eee); padding:1px 4px;
                           border-radius:3px; font-size:0.9em; }
     </style>`;
+  }
+
+  // ── HTML-Escape für Nutzereingaben in innerHTML ───────────────────────────
+  static esc(v) {
+    return String(v ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   // ── Stat-Block Text → strukturiertes Objekt ───────────────────────────────
@@ -59,10 +70,10 @@ class WodSpcCreator {
 
     if (!raw.trim()) return result;
 
-    const lines   = raw.split("\n").map(l => l.trim()).filter(Boolean);
-    const toInt   = (s, fb = 0) => parseInt((s || "").replace(/[^\d]/g, "")) || fb;
+    const lines = raw.split("\n").map(l => l.trim()).filter(Boolean);
+    const toInt = (s, fb = 0) => parseInt((s || "").replace(/[^\d]/g, "")) || fb;
 
-    // EN-Schlüssel für Skill-Parser (intern, kein i18n nötig – sind Systemnamen)
+    // Skill-Schlüssel (interne Systemnamen, kein i18n)
     const skillMap = {
       leadership:"leadership", subterfuge:"subterfuge", performance:"performance",
       larceny:"larceny", intimidation:"intimidation", insight:"insight",
@@ -75,7 +86,7 @@ class WodSpcCreator {
       survival:"survival", persuasion:"persuasion", awareness:"awareness",
     };
 
-    // Typ-Erkennung: Schlüsselwörter EN + DE + i18n-Labels
+    // Typ-Erkennung EN + DE
     const typeMap = {
       mortal:"mortal", human:"mortal", sterblich:"mortal",
       vampire:"vampire", vampir:"vampire",
@@ -88,7 +99,6 @@ class WodSpcCreator {
       /^(general diff|standard dice|secondary attr|exceptional dice|notes\b|other traits\b|health\s*[:=]|willpower\s*[:=]|hunger\s*[:=]|humanity\s*[:=]|rage\s*[:=]|blood potency\s*[:=]|generation\s*[:=]|sire\s*[:=])/i
       .test(line);
 
-    // Erste Nicht-Feld-Zeile → Name
     let nameIdx = -1;
     for (let i = 0; i < lines.length; i++) {
       if (!isFieldLine(lines[i])) {
@@ -98,28 +108,28 @@ class WodSpcCreator {
       }
     }
 
-    // Typ aus Namenszeile ableiten
     const nl = result.name.toLowerCase();
     for (const [k, v] of Object.entries(typeMap)) {
       if (nl.includes(k)) { result.spcType = v; break; }
     }
 
-    // Einleitungstext (zwischen Name und erster Feldzeile) → privatenotes
     const introLines = [];
+    const introIdxSet = new Set();
     if (nameIdx >= 0) {
       for (let i = nameIdx + 1; i < lines.length; i++) {
         if (isFieldLine(lines[i])) break;
         introLines.push(lines[i]);
+        introIdxSet.add(i);
       }
     }
 
-    // Feldzeilen parsen
     const notesLines = [];
     let inNotes = false;
 
-    for (const line of lines) {
-      if (line === result.name) continue;
-      if (introLines.includes(line) && !isFieldLine(line)) continue;
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx];
+      if (lineIdx === nameIdx) continue;
+      if (introIdxSet.has(lineIdx) && !isFieldLine(line)) continue;
 
       const lo = line.toLowerCase();
 
@@ -170,7 +180,6 @@ class WodSpcCreator {
       if (inNotes) { notesLines.push(line); continue; }
     }
 
-    // privatenotes aufbauen
     const privateParas = [];
     if (introLines.length) {
       const t = introLines.join(" ").replace(/- /g, "").replace(/\s{2,}/g, " ").trim();
@@ -296,7 +305,7 @@ class WodSpcCreator {
         collect: (html, s) => { s.mode = html.find('[name="mode"]:checked').val() || "text"; },
       },
 
-      // 1: Textblock (Text-Modus)
+      // 1: Textblock
       {
         title: LSP("Step.TextTitle"),
         nextLabel: LW("Btn.Submit"),
@@ -311,7 +320,7 @@ class WodSpcCreator {
             <code>Exceptional Dice Pools: Persuasion 6, Brawl 4</code><br>
             <code>Notes / Other Traits: …</code>
           </p>
-          <label>${LSP("Field.Name")}</label>
+          <label>${LSP("TextHint.Intro")}</label>
           <textarea name="rawtext" rows="14"
             style="font-family:monospace;font-size:0.82em;"
             placeholder="${LSP("TextHint.Placeholder")}">${s.rawText}</textarea>`,
@@ -330,7 +339,7 @@ class WodSpcCreator {
           return `
             <h3>${LSP("Section.Identity")}</h3>
             <label>${LSP("Field.Name")} *</label>
-            <input type="text" name="name" value="${d.name || ""}" placeholder="${LSP("Field.Name")}" />
+            <input type="text" name="name" value="${d.name || ""}" />
             <div class="g2">
               <div>
                 <label>${LSP("Field.Type")}</label>
@@ -355,7 +364,8 @@ class WodSpcCreator {
             </div>
             <h3>${LSP("Section.Options")}</h3>
             <div class="cb-row">
-              <input type="checkbox" name="locked" id="cb_locked" ${(d.locked !== undefined ? d.locked : true) ? "checked" : ""} />
+              <input type="checkbox" name="locked" id="cb_locked"
+                ${(d.locked !== undefined ? d.locked : true) ? "checked" : ""} />
               <label for="cb_locked">${LSP("Field.Locked")}</label>
             </div>`;
         },
@@ -389,7 +399,7 @@ class WodSpcCreator {
               <div><label>${LSP("Field.Death")}</label>      <input type="text" name="death"    value="${d.death || ""}"    /></div>
             </div>
             <label>${LSP("Field.History")}</label>
-            <textarea name="history"      rows="3">${d.history || ""}</textarea>
+            <textarea name="history" rows="3">${d.history || ""}</textarea>
             <h3>${LSP("Section.Presentation")}</h3>
             <label>${LSP("Field.Appearance")}</label>
             <textarea name="appearance"   rows="2">${d.appearance || ""}</textarea>
@@ -448,7 +458,7 @@ class WodSpcCreator {
               <div><label>${LSP("Field.DiffStrongest")}</label>
                 <input type="number" name="diffStrongest" value="${d.diffStrongest ?? 2}" min="0" max="10" /></div>
               <div><label>${LSP("Field.DiffNormal")}</label>
-                <input type="number" name="diffNormal" value="${d.diffNormal ?? 1}" min="0" max="10" /></div>
+                <input type="number" name="diffNormal"    value="${d.diffNormal ?? 1}"    min="0" max="10" /></div>
             </div>
             <h3>${LSP("Section.XP")}</h3>
             <div class="g2">
@@ -479,32 +489,27 @@ class WodSpcCreator {
       {
         title: LSP("Step.ExceptionalTitle"),
         html: (s) => {
-          // Skill-Gruppen mit lokalisierten Labels über i18n
           const groups = [
-            {
-              key: "Section.Physical",
-              skills: ["athletics","brawl","craft","drive","firearms","larceny","melee","stealth","survival"],
-            },
-            {
-              key: "Section.Social",
-              skills: ["animalken","etiquette","insight","intimidation","leadership","performance","persuasion","streetwise","subterfuge"],
-            },
-            {
-              key: "Section.Mental",
-              skills: ["academics","awareness","finance","investigation","medicine","occult","politics","science","technology"],
-            },
+            { label: LSP("Section.Physical"), skills: ["athletics","brawl","craft","drive","firearms","larceny","melee","stealth","survival"] },
+            { label: LSP("Section.Social"),   skills: ["animalken","etiquette","insight","intimidation","leadership","performance","persuasion","streetwise","subterfuge"] },
+            { label: LSP("Section.Mental"),   skills: ["academics","awareness","finance","investigation","medicine","occult","politics","science","technology"] },
           ];
           const saved = s.d4skills || {};
-          let html = `<p class="hint">${LSP("Hint.ExceptionalDot")} <span style="color:#5a9;font-weight:bold;">●</span> ${LSP("Hint.ExceptionalDetected")}</p>`;
-          for (const { key, skills } of groups) {
-            html += `<h3>${LSP(key)}</h3><div class="g4">`;
+          // Skill-Label via WOD5E-System (Fallback: kapitaliserter Key)
+          const skillLabel = (sk) => {
+            try {
+              const list = WOD5E.Skills.getList({});
+              const entry = list[sk];
+              return entry?.displayName ?? entry?.label ?? sk;
+            } catch { return sk.charAt(0).toUpperCase() + sk.slice(1); }
+          };
+          let html = `<p class="hint">${LSP("Hint.ExceptionalDot")} <span style="color:#5a9;font-weight:bold;">●</span> = ${LSP("Hint.ExceptionalDetected")}</p>`;
+          for (const { label, skills } of groups) {
+            html += `<h3>${label}</h3><div class="g4">`;
             for (const sk of skills) {
               const preVal = saved[sk] ?? s.p.skills[sk] ?? 0;
-              const label  = L(`WOD5E.Skills.${sk.charAt(0).toUpperCase() + sk.slice(1)}`)
-                          || L(`WOD5E.skill.${sk}`)
-                          || sk;
               html += `<div>
-                <label>${label}${preVal > 0 ? ' <span style="color:#5a9;font-weight:bold;">●</span>' : ""}</label>
+                <label>${skillLabel(sk)}${preVal > 0 ? ' <span style="color:#5a9;font-weight:bold;">●</span>' : ""}</label>
                 <input type="number" name="skill_${sk}" value="${preVal}" min="0" max="20" />
               </div>`;
             }
@@ -532,7 +537,8 @@ class WodSpcCreator {
           const isV = ["vampire","ghoul"].includes(spcType);
           const isW = spcType === "werewolf";
           const isH = spcType === "hunter";
-          const p   = s.p;
+          // Fix: s.d5 für bereits eingegebene Werte (Back-Navigation), s.p als Fallback
+          const p   = { ...s.p, ...s.d5 };
           const d3  = s.d3;
 
           const vHtml = isV ? `
@@ -582,26 +588,33 @@ class WodSpcCreator {
           const hHtml = isH ? `
             <h3>${LSP("Section.Hunter")}</h3>
             <div class="g2">
-              <div><label>${LSP("Field.Despair")}</label>      <input type="number" name="despair"     value="${p.despair}"     min="0" max="5" /></div>
-              <div><label>${LSP("Field.Desperation")}</label>  <input type="number" name="desperation" value="${p.desperation}" min="0" max="5" /></div>
-              <div><label>${LSP("Field.Cellname")}</label>     <input type="text"   name="cellname"    value="${p.cellname}"                   /></div>
-              <div><label>${LSP("Field.Creedfields")}</label>  <input type="text"   name="creedfields" value="${p.creedfields}"                /></div>
+              <div><label>${LSP("Field.Despair")}</label>     <input type="number" name="despair"     value="${p.despair}"     min="0" max="5" /></div>
+              <div><label>${LSP("Field.Desperation")}</label> <input type="number" name="desperation" value="${p.desperation}" min="0" max="5" /></div>
+              <div><label>${LSP("Field.Cellname")}</label>    <input type="text"   name="cellname"    value="${p.cellname}"                   /></div>
+              <div><label>${LSP("Field.Creedfields")}</label> <input type="text"   name="creedfields" value="${p.creedfields}"                /></div>
             </div>` : "";
 
           const noExtra = (!isV && !isW && !isH)
-            ? `<p class="hint">${LSP("Type.Mortal")}</p>` : "";
+            ? `<p class="hint" style="color:var(--color-text-dark-secondary,#666);font-style:italic;">${LSP("Type.Mortal")} — ${LSP("Section.Summary")}</p>` : "";
 
           return `
             ${noExtra}${vHtml}${wHtml}${hHtml}
             <h3 style="margin-top:18px;">${LSP("Section.Summary")}</h3>
             <table style="width:100%;font-size:0.85em;border-collapse:collapse;">
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Name")}</td>       <td>${s.d1?.name || "–"}</td></tr>
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Type")}</td>       <td>${spcType}</td></tr>
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Health")}</td>     <td>${LSP("Field.HealthMax")} ${d3?.healthMax ?? 3}</td></tr>
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Willpower")}</td>  <td>${LSP("Field.WpMax")} ${d3?.wpMax ?? 3}</td></tr>
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Pools")}</td>      <td>${LSP("Field.Physical")} ${d3?.physical ?? 1} / ${LSP("Field.Social")} ${d3?.social ?? 1} / ${LSP("Field.Mental")} ${d3?.mental ?? 1}</td></tr>
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Difficulty")}</td> <td>${d3?.diffStrongest ?? 2} / ${d3?.diffNormal ?? 1}</td></tr>
-              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Locked")}</td>     <td>${s.d1?.locked ? "✔" : "✘"}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Name")}</td>
+                  <td>${WodSpcCreator.esc(s.d1?.name || "–")}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Type")}</td>
+                  <td>${spcType}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Health")}</td>
+                  <td>${LSP("Field.HealthMax")} ${d3?.healthMax ?? 3}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Willpower")}</td>
+                  <td>${LSP("Field.WpMax")} ${d3?.wpMax ?? 3}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Pools")}</td>
+                  <td>${LSP("Field.Physical")} ${d3?.physical ?? 1} / ${LSP("Field.Social")} ${d3?.social ?? 1} / ${LSP("Field.Mental")} ${d3?.mental ?? 1}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Difficulty")}</td>
+                  <td>${d3?.diffStrongest ?? 2} / ${d3?.diffNormal ?? 1}</td></tr>
+              <tr><td style="font-weight:bold;padding:2px 6px;">${LSP("Summary.Locked")}</td>
+                  <td>${s.d1?.locked ? "✔" : "✘"}</td></tr>
             </table>`;
         },
         collect: (html, s) => {
@@ -698,12 +711,12 @@ class WodSpcCreator {
           enableDisciplines: isVampire, enableGifts: isWerewolf, enableEdges: isHunter,
           limited: { biography: true, appearance: true, touchstones: false, tenets: false },
         },
-        hunger:      { value: isVampire  ? d5.hunger    : 1, max: 5 },
-        humanity:    { value: isVampire  ? d5.humanity   : 7, stains: isVampire ? d5.stains : 0 },
-        blood:       { potency: isVampire ? d5.potency   : 0, generation: isVampire ? d5.generation : "" },
-        rage:        { value: isWerewolf ? d5.rage       : 1, max: 5 },
-        activeForm:  isWerewolf ? d5.activeForm : "homid",
-        crinosHealth:{ max: isWerewolf ? d5.crinosMax : 4, value: isWerewolf ? d5.crinosMax : 4, superficial: 0, aggravated: 0 },
+        hunger:       { value: isVampire  ? d5.hunger    : 1, max: 5 },
+        humanity:     { value: isVampire  ? d5.humanity   : 7, stains: isVampire ? d5.stains : 0 },
+        blood:        { potency: isVampire ? d5.potency   : 0, generation: isVampire ? d5.generation : "" },
+        rage:         { value: isWerewolf ? d5.rage       : 1, max: 5 },
+        activeForm:   isWerewolf ? d5.activeForm : "homid",
+        crinosHealth: { max: isWerewolf ? d5.crinosMax : 4, value: isWerewolf ? d5.crinosMax : 4, superficial: 0, aggravated: 0 },
         renown: {
           glory:  { value: isWerewolf ? d5.glory  : 0 },
           honor:  { value: isWerewolf ? d5.honor  : 0 },
@@ -714,8 +727,8 @@ class WodSpcCreator {
           hauglosk: { value: isWerewolf ? d5.hauglosk : 0 },
         },
         frenzyActive: false, lostTheWolf: false,
-        despair:     { value: isHunter ? d5.despair     : 0 },
-        desperation: { value: isHunter ? d5.desperation : 0 },
+        despair:      { value: isHunter ? d5.despair     : 0 },
+        desperation:  { value: isHunter ? d5.desperation : 0 },
       },
       flags: { wod5e: { manualDefaultOwnership: true } },
     };
@@ -735,6 +748,18 @@ class WodSpcCreator {
 // Hooks
 // ═══════════════════════════════════════════════════════════════════════════
 
+// API-Export
+Hooks.once("ready", () => {
+  if (game.system.id !== "wod5e") return;
+  const mod = game.modules.get("wod5e-actor-item-creator");
+  if (mod) {
+    mod.api ??= {};
+    mod.api.WodSpcCreator       = WodSpcCreator;
+    mod.api.openActorCreator    = () => WodSpcCreator.run();
+  }
+  console.log("[wod5e-actor-item-creator] actor-creator.js bereit.");
+});
+
 // Button im Actor-Directory (Sidebar)
 Hooks.on("renderActorDirectory", (app, html) => {
   if (game.system.id !== "wod5e") return;
@@ -749,7 +774,7 @@ Hooks.on("renderActorDirectory", (app, html) => {
   if (headerActions) headerActions.appendChild(btn);
 });
 
-// Button im Actor-Sheet-Header (nur SPC-Sheets, nur GM)
+// Button im Actor-Sheet-Header (nur SPC, nur GM)
 Hooks.on("renderActorSheet", (app, html) => {
   if (game.system.id !== "wod5e") return;
   if (app.actor?.type !== "spc") return;
