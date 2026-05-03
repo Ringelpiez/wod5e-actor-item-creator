@@ -47,10 +47,14 @@
     "Field.RageCost":       "Zorn-Kosten",
     "Field.WillpowerCost":  "Willenskraft-Kosten",
     "Field.Source":         "Quelle (optional)",
-    "Field.Book":           "Buch",
-    "Field.Book.Placeholder": "z. B. W5 Grundbuch",
-    "Field.Page":           "Seite",
-    "Field.Page.Placeholder": "z. B. 148",
+    "Field.Book":           {
+      "label": "Buch",
+      "Placeholder": "z. B. W5 Grundbuch"
+    },
+    "Field.Page":           {
+      "label": "Seite",
+      "Placeholder": "z. B. 148"
+    },
 
     "Pool.Hint":        "Attribute, Skills oder Ruf für den Würfelvorrat auswählen.",
     "Pool.ContestHint": "Bei Contested Rolls (Pool A vs Pool B) wird nur die linke Seite (vor 'vs') übernommen.",
