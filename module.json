@@ -27,7 +27,6 @@
     ]
   },
   "esmodules": [
-    "scripts/init.js",
     "scripts/item-creator.js",
     "scripts/actor-creator.js"
   ],
