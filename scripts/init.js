@@ -24,18 +24,28 @@ Hooks.once("ready", () => {
     return;
   }
 
-  // Ensure classes are available (they are defined in item-creator.js and actor-creator.js)
-  if (typeof WodItemCreator === "undefined" || typeof WodSpcCreator === "undefined") {
-    console.error("[wod5e-actor-item-creator] Classes not yet defined. Skipping API export.");
-    return;
+  // Check if classes are available (with retry logic for timing issues)
+  if (typeof globalThis.WodItemCreator === "undefined" || typeof globalThis.WodSpcCreator === "undefined") {
+    // Give classes a moment to be available if there's any loading lag
+    setTimeout(() => {
+      if (typeof globalThis.WodItemCreator === "undefined" || typeof globalThis.WodSpcCreator === "undefined") {
+        console.error("[wod5e-actor-item-creator] Classes not yet defined after delay. Check if item-creator.js and actor-creator.js are loading.");
+        return;
+      }
+      exportAPI();
+    }, 100);
+  } else {
+    exportAPI();
   }
 
-  mod.api = {
-    WodItemCreator,   // Gift & Rite Item Creator
-    WodSpcCreator,    // SPC Actor Creator
-    openItemCreator:  () => WodItemCreator.run(),
-    openActorCreator: () => WodSpcCreator.run(),
-  };
+  function exportAPI() {
+    mod.api = {
+      WodItemCreator: globalThis.WodItemCreator,
+      WodSpcCreator: globalThis.WodSpcCreator,
+      openItemCreator:  () => globalThis.WodItemCreator?.run?.(),
+      openActorCreator: () => globalThis.WodSpcCreator?.run?.(),
+    };
 
-  console.log(`[wod5e-actor-item-creator] v${mod.version} bereit. API: game.modules.get("wod5e-actor-item-creator").api`);
+    console.log(`[wod5e-actor-item-creator] v${mod.version} bereit. API: game.modules.get("wod5e-actor-item-creator").api`);
+  }
 });
