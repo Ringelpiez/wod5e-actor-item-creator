@@ -11,3 +11,11 @@ Ein mehrsprachiges, dialogbasiertes Tool zur Erstellung von NSC sowie Gaben- und
 Ein Modul mit Fokus auf W5, das den Import von Inhalten direkt aus offiziellen Buchtexten erleichtert. Gaben, Riten und NSC (auf Basis des SCS-Templates) können als Textblöcke eingefügt und strukturiert übernommen werden. 
 
 Dabei ist zu beachten, dass störende Zeilenumbrüche und Worttrennungen während des Imports manuell entfernt werden müssen. Ebenso müssen beim Import von NSC-Daten eventuelle Klammerzusätze hinter Fähigkeiten händisch bereinigt werden.
+
+---
+
+Dark Pack
+
+Licensed under the Dark Pack Agreement. Portions of the matrials are the copyrights and trademakrs of Paradox Interactive AB. For more information please visit https://www.wordofdarkness.com and https://www.paradoxinteractive.com/games/world-of-darkness/community/dark-pack-agreement
+
+![Dark Pack Logo]([https://images.ctfassets.net/u73tyf0fa8v1/3oBTHBZk9XmfcBlUPylvFh/673e4a6b14566548c03424ddf627b944/darkpack_logo2.png?w=3840&q=75])
