@@ -14,9 +14,19 @@ Dabei ist zu beachten, dass störende Zeilenumbrüche und Worttrennungen währen
 
 ---
 
-Dark Pack
+<!-- Disclaimer -->
+### Disclaimer
 
-Licensed under the Dark Pack Agreement. Portions of the matrials are the copyrights and trademakrs of Paradox Interactive AB. For more information please visit https://www.wordofdarkness.com and https://www.paradoxinteractive.com/games/world-of-darkness/community/dark-pack-agreement
-
-<img src="https://images.ctfassets.net/u73tyf0fa8v1/3oBTHBZk9XmfcBlUPylvFh/673e4a6b14566548c03424ddf627b944/darkpack_logo2.png?w=3840&q=75" alt="Dark Pack Logo" width="200">
-
+<p align="center">
+  <a href="https://www.worldofdarkness.com/dark-pack">
+    <img align='right' src="https://images.ctfassets.net/u73tyf0fa8v1/6mOQ7Qw3sTT59HZKSEk5hC/c74055ed8f81c30b06eae9285c1901cc/darkpack_logo_small.webp?w=375&q=75" alt="DarkPack-Logo" width="130px" height="auto">
+  </a>
+  <p align="left">
+    This project is fan-made and does not represent official World of Darkness material from Paradox Interactive AB. Contents and materials are created under the 
+    terms of the <strong>Dark Pack</strong> agreement for officially sanctioned World of Darkness fan activities. 
+    <br />
+    Portions of the materials are the copyrights and trademarks of Paradox Interactive AB, and are used with permission. All rights reserved.
+    <a href="https://www.worldofdarkness.com/dark-pack"><strong>For more information please visit worldofdarkness.com »</strong></a>
+    <br />
+  </p>
+</p>
