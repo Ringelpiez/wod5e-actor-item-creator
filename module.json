@@ -5,9 +5,12 @@
   "version": "1.2.0",
   "authors": [
     {
-      "name": "Ringelpiez"
+      "name": "Ringelpiez",
+      "url": "https://github.com/Ringelpiez"
     }
   ],
+  "url": "https://github.com/Ringelpiez/wod5e-actor-item-creator",
+  "bugs": "https://github.com/Ringelpiez/wod5e-actor-item-creator/issues",
   "compatibility": {
     "minimum": "13",
     "verified": "14"
