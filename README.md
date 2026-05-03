@@ -18,4 +18,4 @@ Dark Pack
 
 Licensed under the Dark Pack Agreement. Portions of the matrials are the copyrights and trademakrs of Paradox Interactive AB. For more information please visit https://www.wordofdarkness.com and https://www.paradoxinteractive.com/games/world-of-darkness/community/dark-pack-agreement
 
-![Dark Pack Logo]([https://images.ctfassets.net/u73tyf0fa8v1/3oBTHBZk9XmfcBlUPylvFh/673e4a6b14566548c03424ddf627b944/darkpack_logo2.png?w=3840&q=75])
+![Dark Pack Logo](https://images.ctfassets.net/u73tyf0fa8v1/3oBTHBZk9XmfcBlUPylvFh/673e4a6b14566548c03424ddf627b944/darkpack_logo2.png?w=3840&q=75)
