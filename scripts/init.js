@@ -24,6 +24,12 @@ Hooks.once("ready", () => {
     return;
   }
 
+  // Ensure classes are available (they are defined in item-creator.js and actor-creator.js)
+  if (typeof WodItemCreator === "undefined" || typeof WodSpcCreator === "undefined") {
+    console.error("[wod5e-actor-item-creator] Classes not yet defined. Skipping API export.");
+    return;
+  }
+
   mod.api = {
     WodItemCreator,   // Gift & Rite Item Creator
     WodSpcCreator,    // SPC Actor Creator
