@@ -1,0 +1,51 @@
+{
+  "id": "wod5e-actor-item-creator",
+  "title": "WoD5e Actor Item Creator",
+  "description": "A multilingual dialog-based tool to create SPC actors and Gift/Rite items for the World of Darkness 5e system.",
+  "version": "1.2.0",
+  "authors": [
+    {
+      "name": "Ringelpiez",
+      "url": "https://github.com/Ringelpiez"
+    }
+  ],
+  "url": "https://github.com/Ringelpiez/wod5e-actor-item-creator",
+  "repository": "https://github.com/Ringelpiez/wod5e-actor-item-creator",
+  "bugs": "https://github.com/Ringelpiez/wod5e-actor-item-creator/issues",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "wod5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "5.3.0"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/init.js",
+    "scripts/item-creator.js",
+    "scripts/actor-creator.js"
+  ],
+  "styles": [
+    "styles/item-creator.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    }
+  ],
+  "flags": {}
+}
